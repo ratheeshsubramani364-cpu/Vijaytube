@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VijayTube - Watch, Share & Earn</title>
+    <link rel="manifest" href='data:application/manifest+json,{"name":"VijayTube","short_name":"VijayTube","description":"VijayTube video streaming platform.","start_url":"/","display":"standalone","background_color":"%230f0f0f","theme_color":"%230f0f0f","icons":[{"src":"https://img.icons8.com/color/512/youtube-play.png","sizes":"512x512","type":"image/png"}]}'>
+    <meta name="theme-color" content="#0f0f0f">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-[#0f0f0f] text-white font-sans min-h-screen flex flex-col selection:bg-red-600 selection:text-white">
+
+    <!-- Top Navigation Bar -->
+    <header class="sticky top-0 left-0 right-0 h-14 bg-[#0f0f0f]/95 backdrop-blur-md z-50 flex items-center justify-between px-4 border-b border-[#272727]">
+        <div class="flex items-center gap-3">
+            <div onclick="router.goHome()" class="flex items-center gap-2 cursor-pointer">
+                <div class="bg-red-600 text-white w-9 h-9 rounded-xl flex items-center justify-center shadow-lg shadow-red-600/30">
+                    <i class="fa-solid fa-play text-sm"></i>
+                </div>
+                <span class="text-xl font-bold tracking-tight">VijayTube</span>
+            </div>
+        </div>
+
+        <div class="flex items-center flex-1 max-w-md mx-2 md:mx-4">
+            <div class="flex items-center flex-1 bg-[#121212] border border-[#303030] rounded-l-full px-4 py-1.5">
+                <input type="text" id="searchInput" placeholder="Search videos..." class="bg-transparent w-full focus:outline-none text-sm text-white placeholder-gray-500">
+            </div>
+            <button onclick="handleSearch()" class="bg-[#222222] border border-l-0 border-[#303030] px-4 py-1.5 rounded-r-full hover:bg-[#272727] text-gray-300 text-sm">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </button>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <button onclick="openUploadModal()" class="bg-[#222222] hover:bg-[#272727] px-3 py-1.5 rounded-full text-xs md:text-sm font-medium border border-[#303030]">
+                <i class="fa-solid fa-video text-red-500"></i> Create
+            </button>
+            <button onclick="router.goDashboard()" class="bg-gradient-to-r from-red-600 to-rose-700 px-3 py-1.5 rounded-full text-xs md:text-sm font-medium shadow">
+                <i class="fa-solid fa-chart-line"></i> Studio
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main id="mainContent" class="flex-1 p-4 md:p-6 max-w-7xl mx-auto w-full">
+        <!-- Rendered via JavaScript -->
+    </main>
+
+    <!-- Upload Modal -->
+    <div id="uploadModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-[#1f1f1f] border border-[#333] rounded-2xl w-full max-w-xl p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-[#2f2f2f] pb-3">
+                <h3 class="text-lg font-bold">Upload Video</h3>
+                <button onclick="closeUploadModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold uppercase text-gray-400 mb-1">Video Title</label>
+                <input type="text" id="upTitle" placeholder="e.g., My Vlog" class="w-full bg-[#121212] border border-[#333] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-red-500 text-white">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold uppercase text-gray-400 mb-1">Select Video Sample</label>
+                <select id="upVideoUrl" class="w-full bg-[#121212] border border-[#333] rounded-xl px-4 py-3 text-sm text-white focus:outline-none">
+                    <option value="https://www.w3schools.com/html/mov_bbb.mp4">Big Buck Bunny (HD)</option>
+                </select>
+            </div>
+            <div class="flex justify-end gap-3 pt-2">
+                <button onclick="closeUploadModal()" class="px-5 py-2.5 rounded-xl bg-[#2a2a2a] text-sm font-medium">Cancel</button>
+                <button onclick="handlePublishVideo()" class="px-6 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-sm font-medium">Publish</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Script -->
+    <script>
+        const state = {
+            videos: [
+                { id: 1, title: "Cinematic 4K Drone Footage over Salem", channel: "TamilVlogs", views: "128K views", time: "1 day ago", duration: "08:20", thumb: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80", videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4" },
+                { id: 2, title: "Next-Gen EV Ride-Hailing Platform Launch", channel: "Vijay Tech", views: "45K views", time: "2 hours ago", duration: "12:45", thumb: "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=800&q=80", videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4" }
+            ],
+            searchQuery: "",
+            activeId: null,
+            earnings: 142.50
+        };
+
+        const router = {
+            goHome: () => { state.activeId = null; render(); window.scrollTo(0,0); },
+            goWatch: (id) => { state.activeId = id; render(); window.scrollTo(0,0); },
+            goDashboard: () => { state.activeId = null; renderDashboard(); window.scrollTo(0,0); }
+        };
+
+        function render() {
+            const main = document.getElementById('mainContent');
+            if (!main) return;
+            try {
+                if (state.activeId !== null) {
+                    const v = state.videos.find(x => x.id === state.activeId);
+                    if (!v) return router.goHome();
+                    main.innerHTML = `
+                        <div class="space-y-4 max-w-4xl mx-auto">
+                            <div class="aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl relative">
+                                <video src="${v.videoUrl}" controls playsinline preload="auto" class="w-full h-full object-cover"></video>
+                            </div>
+                            <h1 class="text-xl font-bold">${v.title}</h1>
+                            <button onclick="router.goHome()" class="px-4 py-2 bg-[#222] hover:bg-[#333] rounded-xl text-sm font-medium"><i class="fa-solid fa-arrow-left mr-2"></i> Back to Feed</button>
+                        </div>
+                    `;
+                } else {
+                    const filtered = state.videos.filter(v => v.title.toLowerCase().includes(state.searchQuery.toLowerCase()) || v.channel.toLowerCase().includes(state.searchQuery.toLowerCase()));
+                    main.innerHTML = `
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            ${filtered.length === 0 ? '<div class="col-span-full py-20 text-center text-gray-500">No videos found.</div>' : ''}
+                            ${filtered.map(v => `
+                                <div onclick="router.goWatch(${v.id})" class="cursor-pointer group flex flex-col gap-3">
+                                    <div class="aspect-video rounded-2xl overflow-hidden bg-[#222] relative border border-[#222] group-hover:border-[#444] transition">
+                                        <img src="${v.thumb}" class="w-full h-full object-cover group-hover:scale-105 transition">
+                                        <div class="absolute bottom-2 right-2 bg-black/80 px-2 py-0.5 rounded text-xs font-semibold">${v.duration}</div>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold text-sm line-clamp-2 group-hover:text-red-500 transition">${v.title}</h4>
+                                        <span class="text-xs text-gray-400">${v.channel} &bull; ${v.views}</span>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+            } catch(e) {
+                main.innerHTML = '<div class="text-center py-20 text-red-500">Error loading content. Please refresh.</div>';
+            }
+        }
+
+        function renderDashboard() {
+            const main = document.getElementById('mainContent');
+            if (!main) return;
+            main.innerHTML = `
+                <div class="max-w-2xl mx-auto space-y-6 bg-[#161616] p-6 rounded-2xl border border-[#262626]">
+                    <h2 class="text-xl font-bold">Creator Earnings Studio</h2>
+                    <div class="text-3xl font-extrabold text-emerald-400">$${state.earnings.toFixed(2)}</div>
+                    <p class="text-sm text-gray-400">Partner Program Active (70/30 Revenue Share)</p>
+                    <button onclick="router.goHome()" class="px-4 py-2 bg-[#222] hover:bg-[#333] rounded-xl text-sm transition">Back to Home</button>
+                </div>
+            `;
+        }
+
+        function handleSearch() {
+            state.searchQuery = document.getElementById('searchInput').value;
+            state.activeId = null;
+            render();
+        }
+
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleSearch();
+        });
+
+        function openUploadModal() { document.getElementById('uploadModal').classList.remove('hidden'); }
+        function closeUploadModal() { document.getElementById('uploadModal').classList.add('hidden'); }
+        function handlePublishVideo() {
+            const title = document.getElementById('upTitle').value.trim();
+            if (!title) { alert("Please enter a title"); return; }
+            state.videos.unshift({
+                id: Date.now(),
+                title: title,
+                channel: "Vijay Creator",
+                views: "1 view",
+                time: "Just now",
+                duration: "05:00",
+                thumb: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80",
+                videoUrl: document.getElementById('upVideoUrl').value
+            });
+            state.earnings += 0.50;
+            closeUploadModal();
+            router.goHome();
+            alert("Video published successfully!");
+        }
+
+        render();
+    </script>
+</body>
+</html>
